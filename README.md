@@ -73,7 +73,8 @@ AI 简历分析平台（AI Resume Analyzer）
 
 
 4.查看与下载报告
-![Uploading look_report.jpg…]()
+![look_report](https://github.com/user-attachments/assets/7a39f381-52d1-48d0-8572-9f087b738098)
+
 
 ![download_report](https://github.com/user-attachments/assets/8ce33ec2-24cb-41b0-9000-625c5227c508)
 

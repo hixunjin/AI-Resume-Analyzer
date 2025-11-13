@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人中心</title>
+    <style>
+        body {
+            font-family: "Segoe UI", Arial, sans-serif;
+            background-color: #f8fafc;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* 导航栏 */
+        .navbar {
+            background-color: #007bff;
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            font-size: 16px;
+            margin-right: 20px;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .navbar a:hover {
+            color: #ffe082;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 30px;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #007bff;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        /* 用户信息部分 */
+        .profile-section {
+            padding: 25px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .profile-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 22px;
+        }
+
+        .profile-item {
+            margin-bottom: 15px;
+            font-size: 16px;
+            color: #555;
+        }
+
+        .profile-item strong {
+            color: #007bff;
+        }
+
+        .btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-size: 16px;
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+
+        .btn-download {
+            background-color: #28a745;
+        }
+
+        .btn-download:hover {
+            background-color: #218838;
+        }
+
+        /* 进度条容器 */
+        .progress-container {
+            width: 100%;
+            background-color: #f3f3f3;
+            border-radius: 5px;
+            height: 30px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .progress-bar {
+            width: 0%;
+            height: 100%;
+            background-color: #007bff;
+            border-radius: 5px;
+            text-align: center;
+            color: white;
+            line-height: 30px;
+        }
+
+        .loading {
+            color: #007bff;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+
+        /* 小屏幕优化 */
+        @media (max-width: 768px) {
+            .container {
+                margin: 20px;
+                padding: 15px;
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <div class="navbar">
+        <a href="index.html">首页</a>
+        <span>欢迎回来，<span id="username"></span></span>
+    </div>
+
+    <!-- 主体内容 -->
+    <div class="container">
+        <div class="profile-section">
+            <h2>用户详细信息</h2>
+            <div id="profileInfo">
+                正在加载用户信息...
+            </div>
+            <button class="btn" onclick="fetchUserProfile()">刷新信息</button>
+            <button class="btn" onclick="goToEditProfile()">编辑个人信息</button>
+
+            <!-- ✅ 下载简历按钮 -->
+            <button class="btn btn-download" id="downloadResumeBtn" style="display:none;" onclick="downloadResume()">
+                下载我的简历
+            </button>
+
+            <!-- 进度条容器 -->
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-bar" id="progressBar">0%</div>
+            </div>
+
+            <!-- 动态加载提示 -->
+            <div class="loading" id="downloadLoading" style="display:none;">
+                正在下载简历，请稍候...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const accessToken = localStorage.getItem('accessToken');
+        const username = localStorage.getItem('username');
+
+        if (!accessToken) {
+            alert("请先登录！");
+            window.location.href = 'login.html';
+        }
+
+        document.getElementById('username').textContent = username || '未知用户';
+
+        // 全局变量保存 resume_id
+        let resumeId = null;
+
+        // 获取用户信息（含简历信息）
+        async function fetchUserProfile() {
+            try {
+                const response = await fetch('http://127.0.0.1:8000/api/users/profile/full/', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        alert('登录已过期，请重新登录');
+                        localStorage.removeItem('accessToken');
+                        window.location.href = 'login.html';
+                        return;
+                    }
+                    throw new Error('获取用户信息失败');
+                }
+
+                const data = await response.json();
+                renderProfile(data);
+
+                // ✅ 从后端用户详情中提取简历ID
+                if (data.resume && data.resume.id) {
+                    resumeId = data.resume.id;
+                    document.getElementById("downloadResumeBtn").style.display = "inline-block";
+                } else {
+                    document.getElementById("downloadResumeBtn").style.display = "none";
+                }
+
+            } catch (error) {
+                document.getElementById('profileInfo').innerHTML = `<p style="color:red;">${error.message}</p>`;
+            }
+        }
+
+        // 渲染用户信息
+        function renderProfile(data) {
+            const profileDiv = document.getElementById('profileInfo');
+            const user = data.user || {};
+            const profile = data.profile || {};
+
+            profileDiv.innerHTML = `
+                <div class="profile-item"><strong>用户名：</strong> ${user.username || '无'}</div>
+                <div class="profile-item"><strong>邮箱：</strong> ${user.email || '无'}</div>
+                <div class="profile-item"><strong>手机号：</strong> ${user.phone || '无'}</div>
+                <div class="profile-item"><strong>毕业院校：</strong> ${profile.school || '无'}</div>
+                <div class="profile-item"><strong>学习专业：</strong> ${profile.major || '无'}</div>
+                <div class="profile-item"><strong>期望岗位：</strong> ${profile.expected_job || '无'}</div>
+                <div class="profile-item"><strong>期望薪资：</strong> ${profile.expected_salary || '无'}</div>
+                <div class="profile-item"><strong>期望城市：</strong> ${profile.expected_city || '无'}</div>
+                <div class="profile-item"><strong>当前住址：</strong> ${profile.current_address || '无'}</div>
+                <div class="profile-item"><strong>注册时间：</strong> ${user.date_joined ? new Date(user.date_joined).toLocaleString() : '无'}</div>
+            `;
+        }
+
+        // ✅ 下载简历函数
+        async function downloadResume() {
+            if (!resumeId) {
+                alert("未找到您的简历信息。");
+                return;
+            }
+
+            const progressContainer = document.getElementById('progressContainer');
+            const progressBar = document.getElementById('progressBar');
+
+            progressContainer.style.display = 'block'; // 显示进度条容器
+            let progress = 0;
+
+            const interval = setInterval(() => {
+                progress += 10;
+                progressBar.style.width = `${progress}%`;
+                progressBar.textContent = `${progress}%`;
+                if (progress >= 100) {
+                    clearInterval(interval); // 停止进度条
+                    downloadFile(); // 开始下载
+                }
+            }, 100); // 每100ms增加10%
+
+            // 下载文件的实际函数
+            async function downloadFile() {
+                try {
+                    const response = await fetch(`http://127.0.0.1:8000/api/resumes/download/${resumeId}/`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${accessToken}`
+                        }
+                    });
+
+                    if (!response.ok) {
+                        throw new Error("简历下载失败，请确认文件是否存在。");
+                    }
+
+                    const blob = await response.blob();
+                    const downloadUrl = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = downloadUrl;
+
+                    // 自动从后端 header 或路径中获取文件名
+                    const contentDisposition = response.headers.get('Content-Disposition');
+                    let filename = 'resume.pdf';
+                    if (contentDisposition && contentDisposition.includes('filename=')) {
+                        filename = contentDisposition.split('filename=')[1].replace(/"/g, '');
+                    }
+                    a.download = filename;
+
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+
+                    window.URL.revokeObjectURL(downloadUrl);
+
+                } catch (error) {
+                    alert(error.message);
+                }
+            }
+        }
+
+        function goToEditProfile() {
+            window.location.href = 'add_profile.html';
+        }
+
+        window.onload = fetchUserProfile;
+    </script>
+</body>
+</html>

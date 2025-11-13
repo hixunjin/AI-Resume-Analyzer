@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>报告统计 - 管理员模块</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .statistics-container {
+            margin-top: 50px;
+            text-align: center;
+            width: 80%;
+        }
+        .error-message {
+            color: red;
+            font-size: 14px;
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="statistics-container">
+        <h2>报告统计数据</h2>
+        <canvas id="chart" width="400" height="200"></canvas>
+        <div id="error-message" style="color: red; margin-top: 20px;"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // 获取报告统计数据
+        function loadStatistics() {
+            const accessToken = localStorage.getItem('accessToken'); // 获取存储的 Access Token
+            if (!accessToken) {
+                document.getElementById('error-message').textContent = '未登录，请先登录。';
+                return;
+            }
+
+            // 使用 JWT Token 请求报告统计数据
+            fetch('http://127.0.0.1:8000/api/reports/stats/', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,  // 添加 JWT Token 到请求头
+                    'accept': 'application/json'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('加载统计数据失败。');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // 获取报告统计数据后，生成图表
+                const ctx = document.getElementById('chart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.dates,
+                        datasets: [
+                            {
+                                label: '每日报告数量',
+                                data: data.calls,
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                borderWidth: 2,
+                                fill: false
+                            },
+                            {
+                                label: '平均匹配度',
+                                data: data.avg_scores,
+                                borderColor: 'rgba(153, 102, 255, 1)',
+                                borderWidth: 2,
+                                fill: false
+                            }
+                        ]
+                    },
+                    options: {
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: '日期'
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: '数量/匹配度'
+                                }
+                            }
+                        }
+                    }
+                });
+            })
+            .catch(error => {
+                document.getElementById('error-message').textContent = error.message;
+            });
+        }
+
+        // 页面加载完成后立即调用统计数据
+        window.onload = loadStatistics;
+    </script>
+</body>
+</html>

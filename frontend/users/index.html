@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户首页 - AI 简历分析平台</title>
+    <style>
+        body {
+            font-family: "Segoe UI", Arial, sans-serif;
+            background-color: #f8fafc;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+
+        /* 导航栏 */
+        .navbar {
+            background-color: #007bff;
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .navbar-left a {
+            color: white;
+            text-decoration: none;
+            margin-right: 20px;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .navbar-left a:hover {
+            color: #ffe082;
+        }
+
+        .logout-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .logout-btn:hover {
+            background-color: #c82333;
+        }
+
+        /* 主体容器 */
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            padding: 30px 40px;
+        }
+
+        h1 {
+            color: #007bff;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        /* 上传表单 */
+        .upload-form {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 25px;
+            margin-bottom: 30px;
+        }
+
+        input[type="file"] {
+            display: inline-block;
+            margin-right: 10px;
+        }
+
+        .btn-upload {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 15px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .btn-upload:hover {
+            background-color: #218838;
+        }
+
+        .error-message {
+            color: red;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        /* 进度条 */
+        .progress-container {
+            width: 100%;
+            height: 25px;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0;
+            background-color: #007bff;
+            border-radius: 5px;
+            transition: width 0.1s;
+        }
+
+        /* 报告区域 */
+        .report-section {
+            text-align: left;
+        }
+
+        .report-section h3 {
+            margin-top: 20px;
+        }
+
+        .report-section button {
+            margin-right: 10px;
+            background-color: #17a2b8;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .report-section button:hover {
+            background-color: #138496;
+        }
+
+        .btn-download {
+            background-color: #ff9800 !important;
+        }
+
+        .btn-download:hover {
+            background-color: #e68900 !important;
+        }
+
+        /* 动态加载效果 */
+        .loading {
+            display: none;
+            margin-top: 10px;
+            color: #007bff;
+            font-size: 14px;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #007bff;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            animation: spin 0.8s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 5px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 提示信息 */
+        .alert {
+            background-color: #e7f5ff;
+            border-left: 4px solid #007bff;
+            padding: 10px 15px;
+            margin-top: 15px;
+            border-radius: 6px;
+            color: #004085;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <div class="navbar">
+        <div class="navbar-left">
+            <a href="index.html">首页</a>
+            <a href="user.html">个人中心</a>
+        </div>
+        <div>
+            <span>欢迎使用 AI 简历分析平台</span>
+            <button class="logout-btn" onclick="logout()">退出登录</button>
+        </div>
+    </div>
+
+    <!-- 主体内容 -->
+    <div class="container">
+        <h1>AI简历分析平台</h1>
+
+        <!-- 上传简历 -->
+        <div class="upload-form">
+            <h2>上传简历</h2>
+            <input type="file" id="resumeFile" accept=".pdf,.docx,.txt" />
+            <button class="btn-upload" onclick="uploadResume()">上传简历</button>
+            <div class="loading" id="uploadLoading"><span class="spinner"></span>正在上传，请稍候...</div>
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <div class="error-message" id="uploadError"></div>
+        </div>
+
+        <!-- 分析报告 -->
+        <div class="report-section">
+            <h2>分析报告</h2>
+            <button onclick="fetchReport()">查看报告</button>
+            <button class="btn-download" onclick="downloadReport()">下载报告</button>
+            <div class="loading" id="downloadLoading"><span class="spinner"></span>报告生成中，请稍候...</div>
+            <div id="reportResult"></div>
+        </div>
+    </div>
+
+    <script>
+    const accessToken = localStorage.getItem('accessToken');
+    if (!accessToken) {
+        window.location.href = 'login.html';
+    }
+
+    // 上传简历
+    function uploadResume() {
+        const resumeFile = document.getElementById('resumeFile').files[0];
+        const uploadError = document.getElementById('uploadError');
+        const loading = document.getElementById('uploadLoading');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressBar = document.getElementById('progressBar');
+
+        if (!resumeFile) {
+            uploadError.textContent = '⚠️ 请先选择简历文件！';
+            return;
+        }
+
+        uploadError.textContent = '';
+        loading.style.display = 'inline-block';
+        progressContainer.style.display = 'block';
+
+        const formData = new FormData();
+        formData.append('file', resumeFile);
+
+        let progress = 0;
+        const interval = setInterval(() => {
+            if (progress >= 100) {
+                clearInterval(interval);
+            } else {
+                progress += 5; // 每次增加5%
+                progressBar.style.width = progress + '%';
+            }
+        }, 50); // 模拟上传进度，50ms更新一次进度
+
+        fetch('http://127.0.0.1:8000/api/resumes/upload/', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${accessToken}` },
+            body: formData
+        })
+        .then(response => {
+            loading.style.display = 'none';
+            if (!response.ok) {
+                return response.json().then(err => { throw new Error(err.message || '简历上传失败'); });
+            }
+            return response.json();
+        })
+        .then(data => {
+            localStorage.setItem('resumeId', data.resume_id);
+            uploadError.innerHTML = `<div class="alert">✅ 上传成功！正在为您分析简历，30s左右完成，请耐心等待!</div>`;
+        })
+        .catch(error => {
+            loading.style.display = 'none';
+            uploadError.textContent = error.message;
+        });
+    }
+
+    // 查看分析报告
+    function fetchReport() {
+        const resumeId = localStorage.getItem('resumeId');
+        const reportDiv = document.getElementById('reportResult');
+
+        if (!resumeId) {
+            reportDiv.innerHTML = `<div class="alert">⚠️ 尚未上传简历，无法获取报告。</div>`;
+            return;
+        }
+
+        reportDiv.innerHTML = `<div class="loading"><span class="spinner"></span>正在获取报告...</div>`;
+
+        fetch(`http://127.0.0.1:8000/api/reports/${resumeId}/`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'accept': 'application/json'
+            }
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('报告获取失败');
+            return response.json();
+        })
+        .then(data => {
+            reportDiv.innerHTML = `
+                <h3>📋 报告详情</h3>
+                <p><strong>匹配度评分:</strong> ${data.score}</p>
+                <p><strong>摘要:</strong> ${data.summary || '无摘要'}</p>
+                <p><strong>建议:</strong> ${data.suggestions || '无建议'}</p>
+            `;
+        })
+        .catch(error => {
+            reportDiv.innerHTML = `<div class="alert" style="border-left-color:red;">❌ ${error.message}</div>`;
+        });
+    }
+
+    // 下载分析报告
+    function downloadReport() {
+        const resumeId = localStorage.getItem('resumeId');
+        const loading = document.getElementById('downloadLoading');
+        if (!resumeId) {
+            alert("请先上传简历并生成报告！");
+            return;
+        }
+
+        loading.style.display = 'inline-block';
+
+        fetch(`http://127.0.0.1:8000/api/reports/download_report/${resumeId}/`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Accept': 'application/pdf'
+            }
+        })
+        .then(response => {
+            loading.style.display = 'none';
+            if (!response.ok) throw new Error('报告下载失败');
+            return response.blob();
+        })
+        .then(blob => {
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = downloadUrl;
+            a.download = `分析报告_${resumeId}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(downloadUrl);
+            alert('✅ 报告下载完成！');
+        })
+        .catch(error => {
+            loading.style.display = 'none';
+            alert(error.message);
+        });
+    }
+
+    // 退出登录
+    function logout() {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem("resumeId");
+        alert('您已退出登录');
+        window.location.href = 'login.html';
+    }
+    </script>
+</body>
+</html>

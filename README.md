@@ -52,3 +52,39 @@ AI 简历分析平台（AI Resume Analyzer）
 | 前端    | 静态HTML CSS  JS 修饰使用 Bootstrap框架链接        | 页面展示与数据可视化    |
 | 部署    | Docker + Nginx + Gunicorn             | 容器化部署         |
 | 安全    | JWT 认证 / 文件安全检测 / 限流机制                | 防止滥用与攻击       |
+
+
+四、程序截图
+1.注册和登录
+![register](https://github.com/user-attachments/assets/4c2a767d-b69b-4a1d-929f-a47bca23b421)
+
+
+![login](https://github.com/user-attachments/assets/d9b7a502-cc41-4662-8e56-287e4179e3ae)
+
+
+2.首页
+
+![index](https://github.com/user-attachments/assets/6b3716b0-4c39-403d-ba39-656613393102)
+
+
+3.上传简历
+
+![shangchuan](https://github.com/user-attachments/assets/d0e43834-3d3f-4b74-bbdc-54ea3547efa7)
+
+
+4.查看与下载报告
+![Uploading look_report.jpg…]()
+
+![download_report](https://github.com/user-attachments/assets/8ce33ec2-24cb-41b0-9000-625c5227c508)
+
+
+5.个人中心
+
+![user_info](https://github.com/user-attachments/assets/a5fc42d5-84f2-4212-95f5-55d85feb6a55)
+
+
+
+
+
+
+
